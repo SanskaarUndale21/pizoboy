@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TouchLog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #060d1a;
+      --bg-card:     #0a1525;
+      --bg-hover:    #0f1e35;
+      --border:      #162748;
+      --border-hi:   #1e3558;
+      --accent:      #00e5a0;
+      --accent-dim:  rgba(0,229,160,0.10);
+      --accent-glow: rgba(0,229,160,0.30);
+      --text:        #e2e8f0;
+      --text-muted:  #8899aa;
+      --text-faint:  #4a6080;
+      --red:         #ef4444;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100%;
+    }
+
+    .nav {
+      height: 52px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-left { display: flex; align-items: center; gap: 10px; }
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 17px; font-weight: 700;
+      color: var(--accent); letter-spacing: 0.18em;
+    }
+    .tag {
+      font-size: 10px; padding: 2px 8px; border-radius: 99px;
+      background: var(--accent-dim); color: var(--accent);
+      border: 1px solid var(--accent-glow); font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    #conn-dot  { width: 7px; height: 7px; border-radius: 50%; background: #475569; transition: background 0.3s; }
+    #conn-text { font-size: 12px; color: #64748b; font-weight: 500; }
+
+    .main { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    .top-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .section-title {
+      font-family: 'Space Mono', monospace; font-size: 12px;
+      color: var(--text-faint); letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .count-badge {
+      font-family: 'Space Mono', monospace; font-size: 13px;
+      color: var(--accent); background: var(--accent-dim);
+      border: 1px solid var(--accent-glow); border-radius: 99px;
+      padding: 2px 12px; font-weight: 700;
+    }
+
+    .clear-btn {
+      padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg-card); color: var(--text-muted);
+      font-size: 12px; font-family: inherit; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .clear-btn:hover { border-color: var(--red); color: #f87171; }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px;
+      transition: border-color 0.2s, transform 0.15s;
+      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .card:hover { border-color: var(--border-hi); transform: translateY(-2px); }
+    .card.new   { border-color: var(--accent-glow); box-shadow: 0 0 18px var(--accent-dim); }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.88) translateY(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .card-id {
+      font-family: 'Space Mono', monospace; font-size: 9px;
+      color: var(--text-faint); letter-spacing: 0.1em; margin-bottom: 14px;
+    }
+    .touch-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--accent-dim); border: 1px solid var(--accent-glow);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 14px;
+    }
+    .card-date {
+      font-family: 'Space Mono', monospace; font-size: 18px;
+      font-weight: 700; color: var(--text); margin-bottom: 4px;
+    }
+    .card-time {
+      font-family: 'Space Mono', monospace; font-size: 22px;
+      font-weight: 700; color: var(--accent); margin-bottom: 10px;
+    }
+    .card-label {
+      font-size: 9px; color: var(--text-faint);
+      text-transform: uppercase; letter-spacing: 0.12em;
+    }
+
+    .empty {
+      text-align: center; padding: 80px 20px;
+      color: var(--text-faint); font-size: 14px;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-sub  { font-size: 12px; margin-top: 6px; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-card); }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+
+    @media (max-width: 480px) {
+      .cards { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-left">
+    <span class="logo">TOUCHLOG</span>
+    <span class="tag">LIVE</span>
+  </div>
+  <div class="nav-right">
+    <div id="conn-dot"></div>
+    <span id="conn-text">Connecting...</span>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="top-row">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="section-title">Touch Events</span>
+      <span class="count-badge" id="count">0</span>
+    </div>
+    <button class="clear-btn" onclick="clearAll()">Clear All</button>
+  </div>
+
+  <div class="cards" id="cards">
+    <div class="empty" id="empty">
+      <div class="empty-icon">👆</div>
+      <div>No touch events yet</div>
+      <div class="empty-sub">Touch the sensor to log an event</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const POLL_MS = 2000;
+let knownIds = new Set();
+let totalCount = 0;
+
+function el(id) { return document.getElementById(id); }
+
+function setConn(ok) {
+  el('conn-dot').style.background  = ok ? '#00e5a0' : '#475569';
+  el('conn-text').style.color      = ok ? '#00e5a0' : '#64748b';
+  el('conn-text').textContent      = ok ? 'Live' : 'Offline';
+}
+
+function makeCard(ev, isNew) {
+  const div = document.createElement('div');
+  div.className = 'card' + (isNew ? ' new' : '');
+  div.id = 'ev-' + ev.id;
+
+  div.innerHTML = `
+    <div class="card-id">EVENT #${String(ev.id).padStart(4, '0')}</div>
+    <div class="touch-icon">👆</div>
+    <div class="card-label">Date</div>
+    <div class="card-date">${ev.date}</div>
+    <div class="card-label">Time</div>
+    <div class="card-time">${ev.time}</div>
+  `;
+
+  if (isNew) {
+    setTimeout(() => div.classList.remove('new'), 2000);
+  }
+  return div;
+}
+
+async function poll() {
+  try {
+    const r = await fetch('/api/events');
+    if (!r.ok) { setConn(false); return; }
+    const rows = await r.json();
+    setConn(true);
+
+    const container = el('cards');
+    const empty     = el('empty');
+
+    if (rows.length === 0) {
+      if (!empty) {
+        container.innerHTML = `<div class="empty" id="empty">
+          <div class="empty-icon">👆</div>
+          <div>No touch events yet</div>
+          <div class="empty-sub">Touch the sensor to log an event</div>
+        </div>`;
+      }
+      knownIds.clear();
+      el('count').textContent = '0';
+      return;
+    }
+
+    if (empty) empty.remove();
+
+    // newest-first: prepend new cards
+    const newItems = rows.filter(ev => !knownIds.has(ev.id));
+    newItems.forEach(ev => {
+      knownIds.add(ev.id);
+      const card = makeCard(ev, true);
+      container.insertBefore(card, container.firstChild);
+    });
+
+    totalCount = rows.length;
+    el('count').textContent = totalCount;
+
+  } catch (_) {
+    setConn(false);
+  }
+}
+
+async function clearAll() {
+  if (!confirm('Clear all touch events?')) return;
+  try {
+    await fetch('/api/clear', { method: 'POST' });
+    el('cards').innerHTML = `<div class="empty" id="empty">
+      <div class="empty-icon">👆</div>
+      <div>No touch events yet</div>
+      <div class="empty-sub">Touch the sensor to log an event</div>
+    </div>`;
+    knownIds.clear();
+    el('count').textContent = '0';
+  } catch (_) {}
+}
+
+poll();
+setInterval(poll, POLL_MS);
+</script>
+</body>
+</html>
