@@ -6,9 +6,8 @@ const char* ssid      = "sam";
 const char* password  = "SANS2186";
 const char* serverUrl = "https://pizoboy.onrender.com/api/touch";
 
-#define TOUCH_PIN       T0
-#define BUZZER_PIN      25
-#define TOUCH_THRESHOLD 40
+#define TOUCH_PIN   4    // GPIO 4 -- digital touch sensor (HIGH=touched, LOW=not)
+#define BUZZER_PIN  25
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset = 19800;   // IST UTC+5:30
@@ -17,11 +16,9 @@ const int   dstOffset = 0;
 bool lastTouched = false;
 int  debounce    = 0;
 
-// just toggle duty -- ledcAttach is called once in setup
 void beep() {
-  ledcWrite(BUZZER_PIN, 128);
-  delay(250);
-  ledcWrite(BUZZER_PIN, 0);
+  tone(BUZZER_PIN, 1500, 250);
+  delay(300);
 }
 
 void connectWiFi() {
@@ -60,10 +57,9 @@ void postTouch() {
 
 void setup() {
   Serial.begin(115200);
-
-  // attach LEDC once -- never detach
-  ledcAttach(BUZZER_PIN, 1500, 8);
-  ledcWrite(BUZZER_PIN, 0);
+  pinMode(TOUCH_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
 
   Serial.print("Connecting WiFi");
   WiFi.mode(WIFI_STA);
@@ -80,21 +76,20 @@ void setup() {
 }
 
 void loop() {
-  int  val      = touchRead(TOUCH_PIN);
-  bool rawTouch = val < TOUCH_THRESHOLD;
+  int  val      = digitalRead(TOUCH_PIN);   // 1 = touched, 0 = not touched
+  bool rawTouch = (val == HIGH);
 
-  // need 2 consecutive reads to confirm touch/release
   debounce = rawTouch ? min(debounce + 1, 5) : max(debounce - 1, 0);
   bool touched = debounce >= 2;
 
   if (touched && !lastTouched) {
-    lastTouched = true;          // lock state before any blocking call
+    lastTouched = true;
     Serial.printf("Touch! val=%d\n", val);
     beep();
     postTouch();
   } else if (!touched && lastTouched) {
     lastTouched = false;
-    Serial.println("Released -- waiting for next touch");
+    Serial.println("Released -- waiting");
   }
 
   delay(30);
